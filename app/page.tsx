@@ -1,65 +1,86 @@
-import Image from "next/image";
+import { db } from '@/src/db';
+import { categories, expenses } from '@/src/db/schema';
+import ExpenseForm from '@/src/components/Forms/ExpenseForm/ExpenseForm';
+import DeleteExpenseButton from'@/src/components/DeleteExpenseButton';
+import { sql, desc, gt } from 'drizzle-orm';
 
-export default function Home() {
+export default async function Home() {
+  const thirtyDaysAgo = new Date();
+thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  // 1. Отримуємо дані з бази (Server-side)
+  const allCategories = await db.select().from(categories);
+  const allExpenses = await db
+    .select()
+    .from(expenses)
+    .where(gt(expenses.date, thirtyDaysAgo))
+    .orderBy(desc(expenses.date));
+  
+  // Агрегація суми
+const stats = await db
+    .select({
+      categoryId: expenses.categoryId,
+      total: sql<number>`sum(${expenses.amount})`, 
+    })
+    .from(expenses)
+    .where(gt(expenses.date, thirtyDaysAgo))
+    .groupBy(expenses.categoryId);
+    
+const totalSumResult =await db
+  .select({
+  value: sql<number>`sum(${expenses.amount})`,
+  })
+  .from(expenses)
+  .where(gt(expenses.date, thirtyDaysAgo));
+  
+const totalSum = totalSumResult[0]?.value || 0;
+
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="p-6 max-w-2xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6 text-slate-800">Буд-Облік 🏗️</h1>
+      
+      {/* 2. Блок статистики */}
+      <section className="grid grid-cols-2 gap-4 mb-10">
+        <h2 className="text-3xl font-bold mb-6 text-slate-800">️Загальні витрати</h2>
+        <p className="text-2xl font-bold">{(totalSum / 100).toFixed(2)} <span className="text-sm font-normal">грн</span></p>
+      </section>
+      <section className="grid grid-cols-2 gap-4 mb-10">
+        {stats.map((stat) => {
+          // Шукаємо назву категорії за її ID
+          const categoryName = allCategories.find(c => c.id === stat.categoryId)?.name || 'Невідома';
+          return (
+            <div key={stat.categoryId} className="p-4 border rounded-xl shadow-sm">
+              <p className="text-sm text-blue-600 font-semibold uppercase">{categoryName}</p>
+              <p className="text-2xl font-bold">{(stat.total / 100).toFixed(2)} <span className="text-sm font-normal">грн</span></p>
+            </div>
+          );
+        })}
+      </section>
+      {/* Передаємо категорії у форму */}
+      <section className="mb-10">
+        <ExpenseForm categories={allCategories} />
+      </section>
+
+      {/* 2. Виводимо список витрат, щоб бачити результат */}
+      <section>
+        <h2 className="text-xl font-semibold mb-4">Останні витрати</h2>
+        <div className="space-y-2">
+          {allExpenses.length === 0 && <p className="text-gray-500">Витрат поки немає</p>}
+          
+          {allExpenses.map((exp) => (
+            <div key={exp.id} className="p-3 border rounded flex justify-between items-center">
+              <div>
+                <p className="font-medium">{exp.description || 'Без опису'}</p>
+                <p className="text-sm text-gray-500">{new Date(exp.date).toLocaleDateString()}</p>
+              </div>
+              <span className="font-bold text-green-600">
+                {exp.amount / 100} грн
+              </span>
+              <DeleteExpenseButton id={exp.id} />
+            </div>
+          ))}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+      </section>
+    </main>
   );
 }
