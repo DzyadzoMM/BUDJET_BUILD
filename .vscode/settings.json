@@ -1,0 +1,20 @@
+{
+    "sqltools.connections": [
+        {
+            "pgOptions": {
+                "ssl": {
+                    "rejectUnauthorized": false
+                }
+            },
+            "ssh": "Require",
+            "previewLimit": 50,
+            "server": "postgresql://neondb_owner:npg_oLJ6Gm1gAcKt@ep-noisy-resonance-aliw7tcu-pooler.c-3.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require",
+            "port": 5432,
+            "driver": "PostgreSQL",
+            "name": "Budjer_Build",
+            "database": "neondb",
+            "username": "neondb_owner",
+            "password": "npg_oLJ6Gm1gAcKt"
+        }
+    ]
+}
