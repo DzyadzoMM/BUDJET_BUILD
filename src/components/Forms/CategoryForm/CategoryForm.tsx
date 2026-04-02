@@ -23,7 +23,7 @@ export default function CategoryForm() {
       body: JSON.stringify({
         name,
         budgetLimit,
-        userId: session.user.id, // беремо id із сесії
+        userId: session.user.id,
       }),
     });
 

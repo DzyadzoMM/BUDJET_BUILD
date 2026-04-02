@@ -1,15 +1,12 @@
 'use server';
 
 import { db } from '@/src/db/index';
-import { categories, expenses, users } from '@/src/db/schema';
+import { categories, expenses, projects, users } from '@/src/db/schema';
 import { revalidatePath } from 'next/cache';
 import { eq, and } from 'drizzle-orm';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/lib/auth";
 
-/**
- * Створення нової категорії
- */
 export async function createCategory(formData: FormData) {
   try {
     const session = await getServerSession(authOptions);
@@ -22,7 +19,7 @@ export async function createCategory(formData: FormData) {
     await db.insert(categories).values({
       name,
       budgetLimit,
-      userId, // ← тепер передаємо
+      userId,
     });
 
     revalidatePath('/dashboard');
@@ -32,9 +29,29 @@ export async function createCategory(formData: FormData) {
   }
 }
 
-/**
- * Створення нового витратного запису
- */
+export async function createProject(formData: FormData) {
+  try {
+    const session = await getServerSession(authOptions);
+    const userId = (session?.user as any)?.id;
+    if (!userId) return { error: "Необхідно увійти" };
+
+    const name = formData.get('name') as string;
+    const description = formData.get('description') as string;
+  
+
+    await db.insert(projects).values({
+      name,
+      description,
+      userId,
+    });
+
+    revalidatePath('/dashboard');
+    return { success: true };
+  } catch (error) {
+    return { error: 'Не вдалося створити проект' };
+  }
+}
+
 export async function createExpense(formData: FormData) {
   try {
     const session = await getServerSession(authOptions);
@@ -51,7 +68,7 @@ export async function createExpense(formData: FormData) {
       description,
       type,
       categoryId,
-      userId, // ← обов’язково
+      userId,
     });
 
     revalidatePath('/dashboard');
@@ -61,9 +78,6 @@ export async function createExpense(formData: FormData) {
   }
 }
 
-/**
- * Видалення витрати за ID
- */
 export async function deleteExpense(id: number) {
   try {
     const session = await getServerSession(authOptions);
@@ -81,9 +95,6 @@ export async function deleteExpense(id: number) {
   }
 }
 
-/**
- * Пошук користувача за email
- */
 export async function getUserByEmail(email: string) {
   try {
     const result = await db

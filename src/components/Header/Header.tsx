@@ -11,7 +11,7 @@ export default function Header() {
       <div className="flex items-center gap-2">
         <Building2 className="w-8 h-8 text-emerald-500" />
         <span className="text-2xl font-semibold text-slate-100">
-          Будівельний калькулятор
+          Буд-облік
         </span>
       </div>
 

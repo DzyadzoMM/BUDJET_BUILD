@@ -24,7 +24,7 @@ export async function POST(req: Request) {
       description,
       categoryId,
       type,
-      userId, // автоматично прив’язуємо до користувача
+      userId,
     });
 
     return NextResponse.json({ success: true });

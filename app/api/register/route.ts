@@ -12,7 +12,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email та пароль обов'язкові" }, { status: 400 });
     }
 
-    // Перевіряємо чи користувач вже існує
     const existing = await db
       .select()
       .from(users)
@@ -22,14 +21,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Користувач вже існує" }, { status: 400 });
     }
 
-    // Хешуємо пароль
     const passwordHash = await hash(password, 10);
 
-    // Створюємо нового користувача
     await db.insert(users).values({
       email,
       passwordHash,
-      name: email.split("@")[0], // дефолтне ім’я
+      name: email.split("@")[0], 
     });
 
     return NextResponse.json({ success: true });

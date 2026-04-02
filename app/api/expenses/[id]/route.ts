@@ -18,7 +18,6 @@ export async function DELETE(
 
     const expenseId = Number(params.id);
 
-    // Видаляємо тільки якщо витрата належить цьому користувачу
     await db.delete(expenses).where(
       and(eq(expenses.id, expenseId), eq(expenses.userId, userId))
     );

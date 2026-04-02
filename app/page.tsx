@@ -1,18 +1,19 @@
 import { db } from '@/src/db';
-import { categories, expenses } from '@/src/db/schema';
+import { expenses } from '@/src/db/schema';
 import ExpenseForm from '@/src/components/Forms/ExpenseForm/ExpenseForm';
 import CategoryForm from '@/src/components/Forms/CategoryForm/CategoryForm';
 import DeleteExpenseButton from '@/src/components/DeleteExpenseButton';
 import { sql, and, eq, gt } from 'drizzle-orm';
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/src/lib/auth";
+import { redirect } from "next/navigation";
 
 export default async function Home() {
  const session = await getServerSession(authOptions);
   const userId = session?.user?.id;
 
   if (!userId) {
-    return <p>Будь ласка, увійдіть, щоб переглянути витрати</p>;
+    redirect("/login");
   }
 
   const thirtyDaysAgo = new Date();
